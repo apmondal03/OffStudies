@@ -23,6 +23,10 @@ export function Header() {
   const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Kids Mode has its own dedicated header (see app/kids/layout.tsx) — the
+  // adult nav/theme-toggle chrome shouldn't show there.
+  if (pathname?.startsWith("/kids") || pathname?.startsWith("/young-learners")) return null;
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">

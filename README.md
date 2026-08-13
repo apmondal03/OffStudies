@@ -51,9 +51,94 @@ on a timer you control.
   grammar points, idioms, and prepositions, with a simple Known / Learning / Unseen
   breakdown. No account required.
 - **Pronunciation** — plays provider audio when available, otherwise falls back to the
-  browser's SpeechSynthesis API. Never autoplays.
+  browser's SpeechSynthesis API. Never autoplays (except in Kids Mode — see below).
 - **Light & dark themes**, full keyboard accessibility, reduced-motion support, and a
   distinct editorial visual identity (not a generic AI-SaaS template).
+- **Kids Mode** (`/kids`) — a separate, audio-first learning experience for young
+  children (ages ~3+), deliberately not built on the adult Stream/CEFR system since
+  a pre-reader's needs are genuinely different. See "Kids Mode" below.
+
+## Kids Mode
+
+Kids Mode is a distinct product surface, not just another content module — a
+3-year-old doesn't need CEFR levels, filters, or a save/know/learning trichotomy.
+It has its own visual theme (`.kids-mode` in `globals.css`: brighter palette, a
+playful rounded display font, bigger touch targets), its own header with no adult
+navigation, and a parent gate (a simple math question) before leaving back to the
+main app.
+
+**Three activities**, each a simple audio-first flashcard flow with big
+Previous/Next arrows and an "I did it!" star button instead of complex progress
+tracking:
+- **First Words** (`/kids/words`) — ~85 everyday words across 11 topics (animals,
+  colors, numbers, shapes, family, food, body, clothes, vehicles, weather, actions),
+  each with an emoji, the word, and a short sentence.
+- **ABC Letters** (`/kids/alphabet`) — all 26 letters with a phonics sound hint and
+  two example words each, plus a **letter-tracing activity** (`/kids/alphabet/[letter]/trace`)
+  — draw over a faint guide letter with a finger or mouse; completion is detected
+  by a canvas-based coverage check (see below), not just a static image.
+- **Sight Words** (`/kids/sight-words`) — the Dolch Pre-Primer list, the standard
+  40-word starting point for sight-word instruction (the same legitimacy tier as
+  the Oxford 3000 list — a widely-taught, freely-reused word list, not any single
+  publisher's proprietary content).
+
+**Autoplay is intentional here** — this is the one deliberate exception to the
+rest of the app's "never autoplay" rule. For pre-readers, hearing a word the
+instant it appears is core to the pedagogy (the same pattern used by Khan Academy
+Kids, Duolingo ABC, and similar apps), not an optional extra. Every card has an
+always-visible mute toggle.
+
+**Data model**: `types/kids.ts`, `lib/kids/words.ts`, `lib/kids/alphabet.ts`,
+`lib/kids/sightWords.ts` — all original content. `lib/kids/storage.ts` is a
+separate, much simpler localStorage layer than the adult `ContentModule` system
+(a star counter and a per-activity seen-slugs set) — Kids Mode intentionally does
+not use `useModuleStream`/`useModuleProgress`/`lib/registry.ts`, since forcing the
+adult Stream's filter tabs and known/learning states onto a toddler's UX would
+work against the product, not for it.
+
+**Letter tracing** (`components/kids/LetterTraceCanvas.tsx`) — a genuine drawing
+interaction, not a static illustration. The glyph is rendered once, off-screen, at
+full opacity to classify a 20×20 grid of cells as "letter" or "background" by
+sampling alpha at each cell's center. The visible canvas shows the same glyph
+faintly as a guide; as the child draws with pointer events, each stroke point
+marks its grid cell as "touched." Progress is `touched-letter-cells /
+total-letter-cells`; crossing ~55% triggers the completion celebration and a
+star — no external tracing/handwriting library, no stored image assets.
+
+**Parent Dashboard** (`/kids/parents`) — gated by the same parent-gate math
+question (shown on page load, so direct URL access is protected too, not just the
+header button), showing total stars earned and per-activity progress (words seen
+out of each activity's total). Everything is derived from the same local, on-device
+storage — no accounts, nothing sent anywhere.
+
+## Young Learners (`/young-learners`)
+
+A third, distinct tier for ages ~7-12 — a bridge between Kids Mode (pre-readers)
+and the adult CEFR track. Unlike Kids Mode, this content **does** use the generic
+adult `ContentModule` system (`useModuleStream` / `useModuleProgress` /
+`lib/registry.ts`), registered with `track: "kids"` — a field that existed in the
+architecture since the original refactor but had never actually been used until
+this tier. A 7-12 year old can read, so the Stream mechanic genuinely fits; it
+just needed its own calmer visual theme (`.young-mode` — cool blues/teals instead
+of Kids Mode's bright primary colors) and its own simpler UI components
+(`components/youngLearners/*`), since the existing Stream UI components are
+styled with adult theme tokens that don't carry over.
+
+Two modules, both fully local (no network dependency):
+- **Sight Words** (`lib/youngLearners/sightWords.ts`) — 139 words across the
+  Dolch Primer, 1st Grade, and 2nd Grade tiers, the standard progression that
+  follows Kids Mode's Pre-Primer list. Same legitimacy tier as Pre-Primer — a
+  widely-taught, freely-reused word list.
+- **Grammar** (`lib/youngLearners/grammar.ts`) — 20 concepts (nouns, verbs,
+  adjectives, sentences, punctuation, synonyms/antonyms, contractions, and more)
+  written for a 7-12 year old audience — simpler and more playful than the adult
+  Grammar module, no CEFR references.
+
+Navigation at `/young-learners/practice` is **manual, not timed** — unlike the
+adult Stream's countdown, a reader controls their own pace with Previous/Next.
+Under the hood this just passes a very large `intervalSeconds` to
+`useModuleStream` to effectively disable its internal auto-advance, rather than
+needing a hook-level change.
 
 ## Tech stack
 
@@ -81,6 +166,10 @@ app/
   word/[slug]/              Dictionary word detail page (SEO metadata per word)
   api/word/[word]/          Server-side proxy for dictionary/thesaurus lookups
   about/                   Product explanation
+  kids/                    Kids Mode (ages ~3-6) — First Words, Alphabet
+                            (+ letter tracing), Sight Words, Parent Dashboard
+  young-learners/          Young Learners (ages ~7-12) — Sight Words tier 2 +
+                            Grammar, via the generic ContentModule system
   sitemap.ts, robots.ts    SEO
   not-found.tsx, error.tsx, global-error.tsx
 
@@ -109,6 +198,11 @@ lib/
   modules/
     vocabulary.ts            ContentModule implementation for Vocabulary
     phrasalVerbs.ts           ContentModule implementation for Phrasal Verbs
+    grammar.ts                ContentModule implementation for Grammar
+    idioms.ts                 ContentModule implementation for Idioms
+    prepositions.ts           ContentModule implementation for Prepositions
+    youngSightWords.ts         ContentModule (track: "kids") for Young Learners
+    youngGrammar.ts             ContentModule (track: "kids") for Young Learners
   dictionary/
     provider.ts             DictionaryProvider interface (the abstraction)
     freeDictionaryProvider.ts  Free Dictionary API implementation (server + client paths)
@@ -117,12 +211,21 @@ lib/
   phrasalVerbs/
     data.ts                  ~448 original phrasal verb entries
     selection.ts              Stream selection logic
+  grammar/, idioms/, prepositions/   Same data.ts + selection.ts pattern
+  kids/
+    words.ts, alphabet.ts, sightWords.ts, storage.ts   Kids Mode content + a
+                              separate, much simpler star/seen-slugs storage layer
+  youngLearners/
+    sightWords.ts, grammar.ts, selection.ts   Young Learners content — reuses
+                              the adult selection-function pattern
   word-selection.ts         Word Stream selection logic (spaced-repetition-ready)
   storage.ts                Generic, module-scoped localStorage layer
 
 types/
   dictionary.ts             WordEntry, Definition, CEFRLevel, etc.
   phrasalVerb.ts             PhrasalVerbEntry, PhrasalVerbSense, Formality
+  grammar.ts, idiom.ts, preposition.ts   Same pattern per module
+  kids.ts, youngLearner.ts   Kids Mode and Young Learners content shapes
   contentModule.ts           ContentModule<TEntry, TCandidate, TFilter> — the
                               contract every module implements
 
@@ -347,14 +450,20 @@ git push -u origin main
   category without touching the Stream/storage/other modules" pattern out at
   scale. Further categories (collocations, functional/situational language, etc.)
   follow the exact same recipe in "Adding a new module" above.
-- **Little Learners / Young Learners tracks (ages 3+)** — a separate curriculum
-  track (`track: "kids"` in `ContentModule`) alongside the existing adult CEFR
-  track, using the established Dolch/Fry sight-word progression and standard
-  phonics scope-and-sequence (letter sounds → CVC words → blends → sight words)
-  rather than CEFR, which doesn't fit pre-literate learners. Needs its own UI
-  shell (audio-first, large touch targets, no reading required, parent
-  dashboard, ad-free/account-free) more than new module plumbing — the content
-  layer reuses the same `ContentModule` pattern.
+- **Kids Mode shipped** (`/kids`) — First Words (~85 words, 11 topics), ABC
+  Letters (26, with a canvas-based letter-tracing activity), Sight Words (Dolch
+  Pre-Primer, 40 words), and a Parent Dashboard (`/kids/parents`), with its own
+  theme, parent gate, and star-based reward system.
+- **Young Learners shipped** (`/young-learners`) — Sight Words (Dolch Primer +
+  1st + 2nd Grade, 139 words) and simple Grammar (20 concepts), the first real
+  use of the adult `ContentModule` system's `track: "kids"` field. Natural next
+  steps for this whole 3-track structure (Kids / Young Learners / adult CEFR):
+  - **3rd Grade Dolch tier** and a few more Young Learners grammar concepts,
+    to round out the bridge toward the adult track.
+  - **A visible transition point** — right now a learner has to manually
+    navigate from Young Learners to the main app; a "ready for more?" prompt
+    once most Young Learners content is marked known would make that handoff
+    feel intentional rather than just another link in a footer.
 - **Accounts & sync** — Supabase auth + Postgres, replacing `lib/storage.ts` so
   progress/saved/history sync across devices.
 - **Spaced repetition** — replace the random pick in each module's
