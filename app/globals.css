@@ -151,3 +151,110 @@ body {
 .animate-fade-in {
   animation: fade-in 250ms ease-out;
 }
+
+/* ===================================================================
+   Kids Mode — a deliberately distinct, brighter, more playful theme.
+   Scoped under .kids-mode so it never bleeds into the adult app.
+   =================================================================== */
+.kids-mode {
+  --kids-bg: #fef6e4;
+  --kids-surface: #ffffff;
+  --kids-ink: #2b2540;
+  --kids-ink-muted: #6b6485;
+  --kids-border: #f3d9a8;
+  --kids-accent: #ff6b6b;
+  --kids-accent-2: #4ecdc4;
+  --kids-accent-3: #ffd166;
+  --kids-accent-4: #a78bfa;
+  --kids-accent-contrast: #ffffff;
+
+  background: var(--kids-bg);
+  color: var(--kids-ink);
+  font-family: var(--font-inter);
+  min-height: 100dvh;
+}
+
+.kids-mode .kids-display {
+  font-family: var(--font-baloo);
+}
+
+@keyframes kids-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.kids-mode .animate-kids-pop {
+  animation: kids-pop-in 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes kids-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.kids-mode .animate-kids-bounce {
+  animation: kids-bounce 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kids-mode .animate-kids-pop,
+  .kids-mode .animate-kids-bounce {
+    animation: none;
+  }
+}
+
+/* ===================================================================
+   Young Learners (ages ~7-12) — a third, distinct theme: calmer and more
+   "school-appropriate" than Kids Mode's bright toddler palette, but still
+   clearly not the adult editorial theme. Cool blues/teals instead of
+   primary-color brights; moderate type sizes; Baloo used sparingly
+   (headers only) rather than throughout.
+   =================================================================== */
+.young-mode {
+  --young-bg: #f4f7fb;
+  --young-surface: #ffffff;
+  --young-ink: #1f2937;
+  --young-ink-muted: #64748b;
+  --young-border: #dbe4f0;
+  --young-accent: #2563eb;
+  --young-accent-soft: #dbeafe;
+  --young-accent-2: #0d9488;
+  --young-accent-3: #d97706;
+  --young-accent-contrast: #ffffff;
+
+  background: var(--young-bg);
+  color: var(--young-ink);
+  font-family: var(--font-inter);
+  min-height: 100dvh;
+}
+
+.young-mode .young-display {
+  font-family: var(--font-baloo);
+}
+
+@keyframes young-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.young-mode .animate-young-pop {
+  animation: young-pop-in 280ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .young-mode .animate-young-pop {
+    animation: none;
+  }
+}

@@ -4,6 +4,8 @@ import { phrasalVerbsModule } from "@/lib/modules/phrasalVerbs";
 import { grammarModule } from "@/lib/modules/grammar";
 import { idiomsModule } from "@/lib/modules/idioms";
 import { prepositionsModule } from "@/lib/modules/prepositions";
+import { youngSightWordsModule } from "@/lib/modules/youngSightWords";
+import { youngGrammarModule } from "@/lib/modules/youngGrammar";
 
 /**
  * Every content module the app knows about. This is the ONE place that
@@ -25,6 +27,8 @@ export const CONTENT_MODULES: ContentModule<unknown, unknown, string>[] = [
   grammarModule,
   idiomsModule,
   prepositionsModule,
+  youngSightWordsModule,
+  youngGrammarModule,
 ] as unknown as ContentModule<unknown, unknown, string>[];
 
 export function getModule(id: string) {

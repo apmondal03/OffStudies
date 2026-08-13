@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Inter, IBM_Plex_Mono, Baloo_2 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { NoFlashScript } from "@/components/layout/NoFlashScript";
@@ -26,6 +26,13 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const baloo = Baloo_2({
+  variable: "--font-baloo",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
     default: "Lexicon — Understand words. Remember them.",
@@ -39,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} ${baloo.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
